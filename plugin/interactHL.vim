@@ -1,7 +1,19 @@
 " Vim utility script to interactively set highlight commands
 " Language:    vim script
 " Maintainer:  Dave Silvia <dsilvia@mchsi.com>
-" Date:        8/13/2004
+" Date:        9/1/2004
+"
+" Version 1.2
+"   Added:
+"     -  g:HiliteFilesDir global
+"     -  added Syncolor command
+"        to have generated file
+"        named 'syncolor.vim'
+"     -  added ColorScheme command
+"        which takes 2 arguments.
+"        1) bg - light|dark
+"        2) name - for colors_name=
+"           and file <name>.vim
 "
 " Version 1.0
 "
@@ -33,13 +45,36 @@
 "st        Add 'standout' to the mode attributes
 "un        Add 'underline' to the mode attributes
 
-let s:curHiliteFile=fnamemodify(expand("~/".strftime("%y%m%d%H%M%S")."Hilite.vim"),":p")
-let s:synFile=fnamemodify(expand("~/synKeyword.vim"),":p")
-let s:hiliteFile=fnamemodify(expand("~/Hilite.vim"),":p")
-let s:selectguiRGBFile=fnamemodify(expand("~/selectguiRGB.txt"),":p")
-let s:selectctermRGBFile=fnamemodify(expand("~/selectctermRGB.txt"),":p")
+if !exists("g:HiliteFilesDir")
+	let s:HiliteFilesDir=fnamemodify(expand("~"),":p")
+else
+	let s:HiliteFilesDir=fnamemodify(expand(g:HiliteFilesDir),":p")
+endif
+let lastchr=strlen(s:HiliteFilesDir)-1
+if s:HiliteFilesDir[lastchr] == "\\" || s:HiliteFilesDir[lastchr] == "/"
+	let s:HiliteFilesDir=strpart(s:HiliteFilesDir,0,lastchr)
+endif
+
+let s:curHiliteFile=fnamemodify(expand(s:HiliteFilesDir."/".strftime("%y%m%d%H%M%S")."Hilite.vim"),":p")
+let s:synFile=fnamemodify(expand(s:HiliteFilesDir."/synKeyword.vim"),":p")
+let s:selectguiRGBFile=fnamemodify(expand(s:HiliteFilesDir."/selectguiRGB.txt"),":p")
+let s:selectctermRGBFile=fnamemodify(expand(s:HiliteFilesDir."/selectctermRGB.txt"),":p")
 let s:origHLcmd=''
 let s:newHLcmd=''
+
+function! s:doColorScheme(bg,name)
+	let colorsName=a:name
+	let Ret='set background='.a:bg."\<NL>"
+	let Ret=Ret."highlight clear\<NL>"
+	let Ret=Ret.'if exists("syntax_on")'."\<NL>"
+  let Ret=Ret."\<Tab>syntax reset\<NL>"
+	let Ret=Ret."endif\<NL>"
+	if !IsStrLit(colorsName)
+		let colorsName="'".colorsName."'"
+	endif
+	let Ret=Ret."let colors_name=".colorsName."\<NL>"
+	return Ret
+endfunction
 
 function! s:SetHLline(ifType,mode)
 	let hlKey=a:ifType.a:mode
@@ -227,7 +262,26 @@ function! s:getRGBFile()
 endfunction
 
 command! IactHl call s:suhilite()
-function! s:suhilite()
+command! Syncolor call s:suhilite(1)
+command! -nargs=* ColorScheme call s:suhilite(<f-args>)
+function! s:suhilite(...)
+	let Header=''
+	if a:0
+		if a:0 == 1 && a:1 == 1
+			let s:hiliteFile=fnamemodify(expand(s:HiliteFilesDir."/syncolor.vim"),":p")
+		elseif a:0 < 2
+			echoerr "Cannot do color scheme without a background def and name"
+		else
+			let colorName=a:2
+			if IsStrLit(colorName)
+				let colorName=strpart(colorName,1,strlen(colorName)-2)
+			endif
+			let s:hiliteFile=fnamemodify(expand(s:HiliteFilesDir."/".colorName.".vim"),":p")
+			let Header=s:doColorScheme(a:1,a:2)
+		endif
+	else
+		let s:hiliteFile=fnamemodify(expand(s:HiliteFilesDir."/Hilite.vim"),":p")
+	endif
 	map <script> ?? :call <SID>IactHLhlp()<CR>
 	let homeDir=expand("~")
 	let rgbFile=s:getRGBFile()
@@ -309,7 +363,7 @@ function! s:suhilite()
 		new
 		set nonumber
 		set ignorecase
-		call GetHilite()
+		call s:GetHilite()
 		map <script> fg :call <SID>SetHLline('gui','fg')<CR>
 		map <script> bg :call <SID>SetHLline('gui','bg')<CR>
 		map <script> no :call <SID>SetATTRline('gui','NONE')<CR>
@@ -323,7 +377,7 @@ function! s:suhilite()
 		new
 		set nonumber
 		set ignorecase
-		call GetHilite()
+		call s:GetHilite()
 		map <script> fg :call <SID>SetHLline('cterm','fg')<CR>
 		map <script> bg :call <SID>SetHLline('cterm','bg')<CR>
 		map <script> no :call <SID>SetATTRline('cterm','NONE')<CR>
@@ -334,9 +388,14 @@ function! s:suhilite()
 		map <script> un :call <SID>SetATTRline('cterm','underline')<CR>
 	endif
 	execute bufwinnr(s:hiliteFile).'wincmd w'
+	if Header != ''
+		let @a=Header
+		silent normal "aP
+		silent! :w
+	endif
 endfunction
 
-function! GetHilite()
+function! s:GetHilite()
 	let saveWS=&wrapscan
 	let savez=@z
 	let savep=@/
