@@ -114,7 +114,7 @@ function! s:SetHLline(ifType,mode)
 		let s:newHLcmd=nline
 		execute ':'.nline
 		execute bufwinnr(s:synFile).'wincmd w'
-		silent execute '/'.hiliteName
+		silent execute '/^'.hiliteName
 		execute "normal z\<CR>"
 		execute "normal \<C-U>"
 		silent normal n
@@ -167,7 +167,7 @@ function! s:SetATTRline(ifType,attr)
 		let s:isSet=1
 		execute ':'.nline
 		execute synWinNr.'wincmd w'
-		silent execute '/'.hiliteName
+		silent execute '/^'.hiliteName
 		execute "normal z\<CR>"
 		execute "normal \<C-U>"
 		silent normal n
