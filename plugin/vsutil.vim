@@ -246,7 +246,12 @@ function! Strcmp(str1, str2)
 endfunction
 
 " Sort lines.  SortR() is called recursively.
-function! SortR(start, end, cmp)
+function! SortR(start, end, ...)
+	if a:0
+		let Comparator=a:1
+	else
+		let Comparator='Strcmp'
+	endif
 	if a:start >= a:end
 		return
 	endif
@@ -256,7 +261,7 @@ function! SortR(start, end, cmp)
 	let i = a:start
 	while i <= a:end
 		let str = getline(i)
-		exec "let result = " . a:cmp . "(str, partStr)"
+		exec "let result = " . Comparator . "(str, partStr)"
 		if result <= 0
 			" Need to put it before the partition.  Swap lines i and partition.
 			let partition = partition + 1
@@ -281,14 +286,19 @@ function! SortR(start, end, cmp)
 		call setline(middle, str2)
 		call setline(partition, str)
 	endif
-	call SortR(a:start, partition - 1, a:cmp)
-	call SortR(partition + 1, a:end, a:cmp)
+	call SortR(a:start, partition - 1, Comparator)
+	call SortR(partition + 1, a:end, Comparator)
 endfunc
 
 " To Sort a range of lines, pass the range to Sort() along with the name of a
 " function that will compare two lines.
-function! Sort(cmp) range
-	call SortR(a:firstline, a:lastline, a:cmp)
+function! Sort(...) range
+	if a:0
+		let Comparator=a:1
+	else
+		let Comparator='Strcmp'
+	endif
+	call SortR(a:firstline, a:lastline, Comparator)
 endfunc
 
 " :Sort takes a range of lines and sorts them.
