@@ -1,0 +1,28 @@
+This is a mirror of http://www.vim.org/scripts/script.php?script_id=1054
+
+Commands:
+  Syncolor
+    creates syncolor.vim file
+  ColorScheme bg name
+    creates <name>.vim file with colorscheme header setting background='<bg>' [dark|light] and
+    colors_name='<name>'
+  IactHl
+    creates Hilite.vim file
+
+Files are created in g:HiliteFilesDir, default '~'
+
+Utility to interactively create highlight commands file (syncolor.vim|<name>.vim|Hilite.vim) which can be copied to appropriate  runtimepath directory as for automatic execution at Vim startup.  Previous settings are saved in a file named 'yymmddhhmmssHilite.vim'.
+Use: ?? for online key mapping reference.
+
+The utility opens 3 windows, the top window displays the major highlight groups with their names highlighted according to the current settings.  The middle window lists the highlight commands currently in effect to produce the output shown in the top window.  The bottom window lists the RGB names available for the current Vim release.
+
+Place the cursor on the line you wish to modify in the middle window.  Place the cursor on the RGB value you want in the bottom window.  Use the mapped key sequences to set the line.  The key sequences are:
+
+fg   Set foreground to RGB value
+bg  Set background to RGB value
+no  Set attributes to 'NONE'
+bo  Add 'bold' to attributes
+it    Add 'italic' to attributes
+re   Add 'reverse' to attributes
+st   Add 'standout' to attributes
+un  Add 'underline' to attributes
