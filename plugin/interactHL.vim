@@ -198,11 +198,43 @@ function! s:IactHLhlp()
 	echomsg "Resulting effect is shown in the top window"
 endfunction
 
+function! s:getRGBFile()
+	let rgbFile=glob($VIMRUNTIME.'/rgb.txt')
+	if rgbFile == ''
+		let X11dir=glob('/usr/X11*')
+		if X11dir != ''
+			let rgbFile=glob(X11dir.'/lib/X11/rgb.txt')
+		endif
+	endif
+	if rgbFile == ''
+		let rtpDir=StrListTok(&runtimepath,'g:rtp')
+		while rtpDir != ''
+			let rgbFile=glob(rtpDir.'/plugin/IactHlRGB/rgb.txt')
+			if rgbFile != ''
+				while rtpDir != ''
+					let rtpDir=StrListTok('','g:rtp')
+				endwhile
+				break
+			endif
+			let rtpDir=StrListTok('','g:rtp')
+		endwhile
+		unlet g:rtp
+	endif
+	if rgbFile == ''
+		echoerr "Cannot find RGB definitions file"
+	endif
+	return rgbFile
+endfunction
+
 command! IactHl call s:suhilite()
 function! s:suhilite()
 	map <script> ?? :call <SID>IactHLhlp()<CR>
 	let homeDir=expand("~")
-	let rgbFile=$VIMRUNTIME.'/rgb.txt'
+	let rgbFile=s:getRGBFile()
+	if rgbFile == ''
+		echoerr "Cannot Continue without RGB definitions!"
+		return
+	endif
 	let newRGBFile=homeDir.'/RGB.txt'
 	let editNewRGB='silent! edit '.newRGBFile
 	let readRGBFile='silent! :r '.rgbFile
